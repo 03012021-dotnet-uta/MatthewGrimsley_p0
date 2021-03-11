@@ -6,20 +6,11 @@ namespace SNS.Client
     /// <summary>
     /// This program prints the range of values [countStart, countEnd] to the console.
     /// If a value is divisible by a certain number, or all of a list of numbers, then
-    /// a word or phrase is printed instead of the value.
+    /// a word or phrase is printed instead of the value. After printing the range, 
+    /// the number of times each word/phrase was substituted is printed.
     /// 
-    /// The output is formatted 
-    /// 
-    /// Print 1 to 1000 to console (make these variables)
-    ///     They should print 10 per line and be separated by spaces
-    /// Print "sweet" instead of the number when it is divisible by 3
-    /// Print "salty" instead of the number when it is divisible by 5
-    /// Print "sweet'nSalty" when it is divisible by 3 & 5
-    /// 
-    /// At the end of the count print out the number of times each string was printed
-    /// 
-    /// Push compilable source to your p0 repo in the batch github
-    /// DUE 03-10-21
+    /// The output is formatted according to the values of two variables, which set
+    /// the char-width of each output and the number of outputs per line.
     /// </summary>
     internal class Program
     {
