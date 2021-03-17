@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sweet’nSalty</title>
+    <script>
+      let phrases = 
+      [
+        {
+          "phrase":"Sweet",
+          "factor":3,
+          "count":0
+        },
+        {
+          "phrase":"Salty",
+          "factor":5,
+          "count":0
+        },
+        {
+          "phrase":"Sweet’nSalty",
+          "factor":15,
+          "count":0
+        }
+      ];
+      let countStart = 1;
+      let countEnd = 1000;
+      let countsPerLine = 10;
+      let printWidth = 0;
+
+      /**
+       * This loop and the next line sets the printWidth to 2 more than the longest phrase in phrases
+       */
+      phrases.forEach(element =>
+      {
+        if(element.phrase.length > printWidth)
+        {
+          printWidth = element.phrase.length;
+        }
+      });
+      printWidth += 2;
+
+      /**
+       * This function pads the end of string to have a minimum number of characters.
+       */
+      function padString(string, minLength)
+      {
+        if(typeof(string) == "string")
+        {
+          while (string.length < minLength)
+          {
+            string += " ";
+          }
+        }
+        return string;
+      }
+
+      /**
+       * This function handles all console.log() calls. It places multiple entries
+       * per line and sets spacing.
+       */
+      let textAccumulator = "";
+      function printFormatted(count, statement)
+      {
+        if(textAccumulator == "")
+        {
+          textAccumulator = padString(statement, printWidth);
+        }
+        else
+        {
+          textAccumulator += padString(statement, printWidth);
+        }
+        if((count - countStart + 1) % countsPerLine == 0)
+        {
+          console.log(textAccumulator);
+          textAccumulator = "";
+        }
+      }
+
+      /**
+       * Phrases must be sorted decending for the logic in the counting loop to work
+       */
+      phrases.sort((a,b)=>
+        {
+          if(a.factor==b.factor) return 0;
+          return b.factor-a.factor;
+        });
+
+      for (let count = countStart; count <= countEnd; count++)
+      {
+        let aPhraseMatched = false;
+        for (let index = 0; index < phrases.length; index++) {
+          if(count%phrases[index].factor==0)
+          {
+            printFormatted(count, phrases[index].phrase);
+            aPhraseMatched = true;
+            break;
+          }
+        }
+        if(!aPhraseMatched)
+        {
+          printFormatted(count, count.toString());
+        }
+      }
+    </script>
+</head>
+<body>
+    
+</body>
+</html>
