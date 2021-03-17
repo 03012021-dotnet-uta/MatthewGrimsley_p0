@@ -5,7 +5,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sweet’nSalty</title>
-    <script>
+    <script> // Inline JavaScript to keep everything in a single file
       let phrases = 
       [
         {
@@ -87,6 +87,11 @@
           return b.factor-a.factor;
         });
 
+      /**
+       * This loop counts from countStart to countEnd. Printing a phrase whenever the
+       * count is divisible by an associated factor. If the count is not divisible by
+       * any of the factors in the phrases object-arry, then the count itself is printed.
+       */
       for (let count = countStart; count <= countEnd; count++)
       {
         let aPhraseMatched = false;
