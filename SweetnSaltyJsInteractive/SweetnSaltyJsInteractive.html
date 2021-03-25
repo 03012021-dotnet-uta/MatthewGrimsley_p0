@@ -5,9 +5,416 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Sweet’nSalty</title>
+
+    <style>
+        body {
+            font-family: fantasy;
+            background-color: #FFFFFF;
+            color: #000000;
+        }
+
+        #title {
+            font-family: serif;
+            padding: 0;
+            text-align: center;
+            margin: 0.5em;
+            color: #395B50;
+        }
+
+        #entry_flexbox {
+            display: flex;
+            flex-flow: row nowrap;
+            justify-content: space-around;
+            align-items: center;
+        }
+
+        .button {
+            font-family: monospace;
+            font-size: 1.5em;
+            font-weight: bold;
+            border-radius: 0.5em;
+            padding: 1em;
+            text-align: center;
+            align-self: stretch;
+            cursor: pointer;
+            margin: auto;
+            background-color: #AAAAAA;
+        }
+
+        .button:hover {
+            background-color: #DDDDDD;
+        }
+
+        #content {
+            max-width: 36em;
+            margin: auto;
+            padding: 1em;
+            text-align: center;
+        }
+
+        #range_entry, #per_line_entry, #complete {
+            display: none;
+            text-align: center;
+            padding: 1em;
+        }
+        
+        input[type=number] {
+            width: 5em;
+        }
+
+        #table_container {
+            display: none;
+            margin: auto;
+            color: #000000;
+        }
+
+        table {
+            margin: auto;
+            border: 5px solid #395B50;
+            border-radius: 2em;
+        }
+
+        th, td {
+            text-align: center;
+            padding: 0.5em;
+        }
+
+        #show_counts {
+            display: none;
+            flex-flow: column nowrap;
+            justify-content: start;
+            align-items: center;
+            margin: auto;
+        }
+
+    </style>
+
 </head>
+
 <body>
+    <h2 id="title">Sweet 'N' Salty Js Interactive</h2>
+
+    <div id="entry_flexbox">
+        <div id="prevButton" class="button">Back</div>
+        <div id="content">
+            <div id="instructions">This app displays a sequence of numbers in tabular form;
+                    however, it displays a keyword instead of the number when the number passes one of the following rules:<br>
+                <ul>
+                    <li>If the number is a multiple of both 3 and 5, it is replaced with “sweet’nSalty”</li>
+                    <li>If the number is a multiple of 3, it is replaced with “sweet"</li>
+                    <li>If the number is a multiple of 5, it is replaced with “salty”</li>
+                </ul>
+            </div>
+            <div id="range_entry">
+                <form>
+                    <h3 class="entry_label">Enter the counting range:</h3>
+                    <label>First Number: <input id="countStart" type="number" name="countStart"></label>
+                    <label>Last Number: <input id="countEnd" type="number" name="countEnd"></label>
+                </form>
+            </div>
+            <div id="per_line_entry">
+                <form>
+                    <h3 class="entry_label">Enter the number of results to print per line:</h3>
+                    <label>Items per Line: <input id="perLine" type="number" min="1" name="perLine"></label>
+                </form>
+            </div>
+            <div id="complete"><h3>Tabulation Complete!</h3>
+            </div>
+        </div>
+        <div id="nextButton" class="button">Next</div>
+    </div>
+    <br>
+    <div id="table_container">
+        <table id="table"></table>
+    </div>
+    <br>
+    <div id="show_counts"></div>
+
+    <script> // Inline JavaScript to keep everything in a single file
+        let phrases = 
+        [
+          {
+            "phrase":"sweet",
+            "factor":3,
+            "count":0
+          },
+          {
+            "phrase":"salty",
+            "factor":5,
+            "count":0
+          },
+          {
+            "phrase":"sweet’nSalty",
+            "factor":15,
+            "count":0
+          }
+        ];
+
+        /**
+         * Phrases must be sorted decending for the logic in the counting loop to work
+         */
+        phrases.sort((a,b)=>
+        {
+            if(a.factor==b.factor) return 0;
+            return b.factor-a.factor;
+        });
+
+        const phases = {
+            INSTRUCTIONS: 0,
+            RANGE_ENTRY: 1,
+            PER_LINE_ENTRY: 2,
+            COMPLETE: 3
+        }
+        let phase = phases.INSTRUCTIONS;
+
+        let countStart = 0;
+        let countEnd = 0;
+        const minCountRange = 200;
+        const maxCountRange = 10000;
+
+        const minCountsPerLine = 10;
+        let countsPerLine = minCountsPerLine;
+        let minCPLRangeDivisor = 100;
+        
+        // Add event listeners for the previous and next buttons
+        document.getElementById("prevButton").addEventListener("click", prevButton);
+        document.getElementById("nextButton").addEventListener("click", nextButton);
+
+        /**
+         * This callback is triggered when the previous button is clicked
+         */
+        function prevButton()
+        {
+            switch(phase)
+            {
+                case phases.RANGE_ENTRY:
+                    document.getElementById("instructions").style.display = "inline";
+                    document.getElementById("range_entry").style.display = "none";
+                    phase = phases.INSTRUCTIONS;
+                break;
+                case phases.PER_LINE_ENTRY:
+                    document.getElementById("range_entry").style.display = "inline";
+                    document.getElementById("per_line_entry").style.display = "none";
+                    phase = phases.RANGE_ENTRY;
+                break;
+                case phases.COMPLETE:
+                    document.getElementById("per_line_entry").style.display = "inline";
+                    document.getElementById("complete").style.display = "none";
+                    document.getElementById("show_counts").style.display = "none";
+                    document.getElementById("nextButton").textContent = "Next";
+                    resetTable();
+                    phase = phases.PER_LINE_ENTRY;
+                break;
+            }
+        }
+  
+        /**
+         * This callback is triggered when the next button is clicked
+         */
+        function nextButton()
+        {
+            switch(phase)
+            {
+                case phases.INSTRUCTIONS:
+                    document.getElementById("instructions").style.display = "none";
+                    document.getElementById("range_entry").style.display = "inline";
+                    phase = phases.RANGE_ENTRY;
+                break;
+                case phases.RANGE_ENTRY:
+                    if(updateRange())
+                    {
+                        document.getElementById("range_entry").style.display = "none";
+                        document.getElementById("per_line_entry").style.display = "inline";
+                        phase = phases.PER_LINE_ENTRY;
+                    }
+                break;
+                case phases.PER_LINE_ENTRY:
+                    if(updatePerLine())
+                    {
+                        document.getElementById("per_line_entry").style.display = "none";
+                        document.getElementById("complete").style.display = "inline";
+                        document.getElementById("show_counts").style.display = "flex";
+                        document.getElementById("nextButton").textContent = "Reset";
+                        generateTable();
+                        phase = phases.COMPLETE;
+                    }
+                break;
+                case phases.COMPLETE:
+                    resetApp();
+                    document.getElementById("complete").style.display = "none";
+                    document.getElementById("show_counts").style.display = "none";
+                    document.getElementById("instructions").style.display = "inline";
+                    document.getElementById("nextButton").textContent = "Next";
+                    phase = phases.INSTRUCTIONS;
+                break;
+            }
+        }
+
+        /**
+         * Updates the count range, validates input
+         */
+        function updateRange()
+        {
+            let startInput = document.getElementById("countStart");
+            let userStart = parseInt(startInput.value, 10);
+            if(isNaN(userStart))
+            {
+                startInput.value = '';
+                startInput.setCustomValidity("Please enter a number!");
+                startInput.reportValidity();
+                return false;
+            }
+            countStart = userStart;
+
+            let endInput = document.getElementById("countEnd");
+            let userEnd = parseInt(endInput.value, 10);
+            if(isNaN(userEnd))
+            {
+                endInput.value = '';
+                endInput.setCustomValidity("Please enter a number!");
+                endInput.reportValidity();
+                return false;
+            }
+            if(userEnd - userStart < minCountRange)
+            {
+                endInput.value = '';
+                endInput.setCustomValidity(`Range must span at least ${minCountRange}`);
+                endInput.reportValidity();
+                return false;
+            }
+            if(userEnd - userStart > maxCountRange)
+            {
+                endInput.value = '';
+                endInput.setCustomValidity(`Range must span at most ${maxCountRange}`);
+                endInput.reportValidity();
+                return false;
+            }
+            countEnd = userEnd;
+            return true;
+        }
+
+        function updatePerLine()
+        {
+            let perLineElement = document.getElementById("perLine");
+
+            let perLine = parseInt(perLineElement.value)
+            if(isNaN(perLine))
+            {
+                perLineElement.value = '';
+                perLineElement.setCustomValidity("Please enter a number!");
+                perLineElement.reportValidity();
+                return false;
+            }
+
+            // After this if statement, 'largerMinCLP' will hold whichever is larger between
+            // range / minCPLRangeDivisor and the minCountsPerLine
+            let largerMinCLP = minCountsPerLine;
+            if(((countEnd - countStart) / minCPLRangeDivisor) > largerMinCLP)
+            {
+                largerMinCLP = Math.ceil((countEnd - countStart) / minCPLRangeDivisor);
+            }
+            if(perLine < largerMinCLP)
+            {
+                perLineElement.value = '';
+                perLineElement.setCustomValidity(`Must be at least ${largerMinCLP}`);
+                perLineElement.reportValidity();
+                return false;
+            }
+
+            countsPerLine = perLine;
+            return true;
+        }
+
+        function resetApp()
+        {
+            resetUserInput();
+            resetTable();
+        }
+
+        // This function resets all user-input variables to their default values
+        function resetUserInput()
+        {
+            countStart = 0;
+            countEnd = 0;
+            countsPerLine = minCountsPerLine;
+            document.getElementById("countEnd").value = '';
+            document.getElementById("countStart").value = '';
+            document.getElementById("perLine").value = '';
+        }
+
+        // This function resets HTML element visibility and content to the initial condition
+        function resetTable()
+        {
+            document.getElementById("table_container").style.display = "none";
+            document.getElementById("table").innerHTML = null;
+            document.getElementById("show_counts").textContent = "";
+        }
+
+        function generateTable()
+        {
+            /**
+             * This loop counts from countStart to countEnd, adding the appropriate
+             * entry to the table
+             */
+            let currentRow;
+            for (let count = countStart; count <= countEnd; count++)
+            {
+                let aPhraseMatched = false;
+                for (let index = 0; index < phrases.length; index++) {
+                    if(count%phrases[index].factor==0)
+                    {
+                        addTableEntry(count, phrases[index].phrase);
+                        phrases[index].count += 1;
+                        aPhraseMatched = true;
+                        break;
+                    }
+                }
+                if(!aPhraseMatched)
+                {
+                    addTableEntry(count, count.toString());
+                }
+            }
+
+            document.getElementById("table_container").style.display = "block";
+            
+            // This section of code prints the number of times each phrase was printed
+            let showCountsDiv = document.getElementById("show_counts");
+            let line = document.createElement("div");
+            line.setAttribute("padding", "1em");
+            line.innerHTML += "Keyword: total occurrences";
+            showCountsDiv.appendChild(line);
+            phrases.forEach(element => {
+                line = document.createElement("div");
+                line.innerHTML = element.phrase + ": " + element.count;
+                showCountsDiv.appendChild(line);
+            });
+        }
+
+        // This function adds element to the table. It places multiple entries per line.
+        function addTableEntry(count, statement)
+        {
+            const tableElement = document.getElementById("table");
+            // Create a new table row and set the currentRow variable to it
+            if((count - countStart) % countsPerLine == 0)
+            {
+                currentRow = document.createElement("tr");
+                tableElement.appendChild(currentRow);
+            }
+
+            let tdElement = document.createElement("td");
+            if(isNaN(parseInt(statement)))
+            {
+                tdElement.textContent = statement;
+            }
+            else
+            {
+                tdElement.textContent = parseInt(statement, 10).toLocaleString();
+            }
+            currentRow.appendChild(tdElement);
+        }
+
+      </script>
     
 </body>
 </html>
